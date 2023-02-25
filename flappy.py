@@ -1,5 +1,7 @@
 import pygame, random, time
 from pygame.locals import *
+import uuid
+import os
 
 #VARIABLES
 SCREEN_WIDHT = 400
@@ -135,7 +137,16 @@ for i in range (2):
     pipe_group.add(pipes[0])
     pipe_group.add(pipes[1])
 
-
+# make sure dataset/jump | dataset/no_jump are valid folders
+DATASET_FOLDER = "dataset"
+JUMP_FOLDER = "jump"
+NO_JUMP_FOLDER = "no_jump"
+if not os.path.isdir(f"{DATASET_FOLDER}/"):
+    os.mkdir(DATASET_FOLDER)
+if not os.path.isdir(f"{DATASET_FOLDER}/{JUMP_FOLDER}"):
+    os.mkdir(f"{DATASET_FOLDER}/{JUMP_FOLDER}")
+if not os.path.isdir(f"{DATASET_FOLDER}/{NO_JUMP_FOLDER}"):
+    os.mkdir(f"{DATASET_FOLDER}/{NO_JUMP_FOLDER}")
 
 clock = pygame.time.Clock()
 
@@ -177,6 +188,8 @@ while True:
 
     clock.tick(15)
 
+    jumped = False
+
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
@@ -185,6 +198,7 @@ while True:
                 bird.bump()
                 pygame.mixer.music.load(wing)
                 pygame.mixer.music.play()
+                jumped = True
 
     screen.blit(BACKGROUND, (0, 0))
 
@@ -212,6 +226,7 @@ while True:
     ground_group.draw(screen)
 
     pygame.display.update()
+    pygame.image.save(screen,f"dataset/{'jump' if jumped else 'no_jump'}/{uuid.uuid4()}.jpg")
 
     if (pygame.sprite.groupcollide(bird_group, ground_group, False, False, pygame.sprite.collide_mask) or
             pygame.sprite.groupcollide(bird_group, pipe_group, False, False, pygame.sprite.collide_mask)):
