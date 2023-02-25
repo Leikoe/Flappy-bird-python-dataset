@@ -2,6 +2,16 @@ import pygame, random, time
 from pygame.locals import *
 import uuid
 import os
+from PIL import Image
+import numpy as np
+from tensorflow import keras
+from tensorflow.keras import layers
+from numpy import asarray
+
+ia_mode = True
+if ia_mode:
+    model = keras.models.load_model("../model")
+
 
 # VARIABLES
 SCREEN_WIDHT = 400
@@ -222,7 +232,15 @@ while True:
     ground_group.draw(screen)
 
     pygame.display.update()
-    pygame.image.save(screen, f"dataset/{'jump' if jumped else 'no_jump'}/{uuid.uuid4()}.jpg")
+
+    if ia_mode:
+        strFormat = 'RGBA'
+        raw_str = pygame.image.tostring(screen, strFormat, False)
+        image = Image.frombytes(strFormat, screen.get_size(), raw_str).convert("L")
+        pred = model(asarray(image)[None, :,:,None])
+        print(pred)
+    else:
+        pygame.image.save(screen, f"dataset/{'jump' if jumped else 'no_jump'}/{uuid.uuid4()}.jpg")
 
     if (pygame.sprite.groupcollide(bird_group, ground_group, False, False, pygame.sprite.collide_mask) or
             pygame.sprite.groupcollide(bird_group, pipe_group, False, False, pygame.sprite.collide_mask)):
