@@ -8,7 +8,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from numpy import asarray
 
-ia_mode = True
+ia_mode = False
 if ia_mode:
     model = keras.models.load_model("../model")
 
@@ -161,7 +161,7 @@ begin = True
 
 while begin:
 
-    clock.tick(15)
+    clock.tick(20)
 
     for event in pygame.event.get():
         if event.type == QUIT:
@@ -237,8 +237,8 @@ while True:
         strFormat = 'RGBA'
         raw_str = pygame.image.tostring(screen, strFormat, False)
         image = Image.frombytes(strFormat, screen.get_size(), raw_str).convert("L")
-        pred = model(asarray(image)[None, :,:,None])
-        print(pred)
+        pred = model(asarray(image)[None, :,:,None]).numpy()
+        print(pred[0][0])
     else:
         pygame.image.save(screen, f"dataset/{'jump' if jumped else 'no_jump'}/{uuid.uuid4()}.jpg")
 
