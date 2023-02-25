@@ -3,7 +3,7 @@ from pygame.locals import *
 import uuid
 import os
 
-#VARIABLES
+# VARIABLES
 SCREEN_WIDHT = 400
 SCREEN_HEIGHT = 600
 SPEED = 20
@@ -11,7 +11,7 @@ GRAVITY = 2.5
 GAME_SPEED = 15
 
 GROUND_WIDHT = 2 * SCREEN_WIDHT
-GROUND_HEIGHT= 100
+GROUND_HEIGHT = 100
 
 PIPE_WIDHT = 80
 PIPE_HEIGHT = 500
@@ -29,9 +29,9 @@ class Bird(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
 
-        self.images =  [pygame.image.load('assets/sprites/bluebird-upflap.png').convert_alpha(),
-                        pygame.image.load('assets/sprites/bluebird-midflap.png').convert_alpha(),
-                        pygame.image.load('assets/sprites/bluebird-downflap.png').convert_alpha()]
+        self.images = [pygame.image.load('assets/sprites/bluebird-upflap.png').convert_alpha(),
+                       pygame.image.load('assets/sprites/bluebird-midflap.png').convert_alpha(),
+                       pygame.image.load('assets/sprites/bluebird-downflap.png').convert_alpha()]
 
         self.speed = SPEED
 
@@ -48,7 +48,7 @@ class Bird(pygame.sprite.Sprite):
         self.image = self.images[self.current_image]
         self.speed += GRAVITY
 
-        #UPDATE HEIGHT
+        # UPDATE HEIGHT
         self.rect[1] += self.speed
 
     def bump(self):
@@ -59,16 +59,13 @@ class Bird(pygame.sprite.Sprite):
         self.image = self.images[self.current_image]
 
 
-
-
 class Pipe(pygame.sprite.Sprite):
 
     def __init__(self, inverted, xpos, ysize):
         pygame.sprite.Sprite.__init__(self)
 
-        self. image = pygame.image.load('assets/sprites/pipe-green.png').convert_alpha()
+        self.image = pygame.image.load('assets/sprites/pipe-green.png').convert_alpha()
         self.image = pygame.transform.scale(self.image, (PIPE_WIDHT, PIPE_HEIGHT))
-
 
         self.rect = self.image.get_rect()
         self.rect[0] = xpos
@@ -79,17 +76,14 @@ class Pipe(pygame.sprite.Sprite):
         else:
             self.rect[1] = SCREEN_HEIGHT - ysize
 
-
         self.mask = pygame.mask.from_surface(self.image)
-
 
     def update(self):
         self.rect[0] -= GAME_SPEED
 
-        
 
 class Ground(pygame.sprite.Sprite):
-    
+
     def __init__(self, xpos):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load('assets/sprites/base.png').convert_alpha()
@@ -100,11 +94,14 @@ class Ground(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect[0] = xpos
         self.rect[1] = SCREEN_HEIGHT - GROUND_HEIGHT
+
     def update(self):
         self.rect[0] -= GAME_SPEED
 
+
 def is_off_screen(sprite):
     return sprite.rect[0] < -(sprite.rect[2])
+
 
 def get_random_pipes(xpos):
     size = random.randint(100, 300)
@@ -127,12 +124,12 @@ bird_group.add(bird)
 
 ground_group = pygame.sprite.Group()
 
-for i in range (2):
+for i in range(2):
     ground = Ground(GROUND_WIDHT * i)
     ground_group.add(ground)
 
 pipe_group = pygame.sprite.Group()
-for i in range (2):
+for i in range(2):
     pipes = get_random_pipes(SCREEN_WIDHT * i + 800)
     pipe_group.add(pipes[0])
     pipe_group.add(pipes[1])
@@ -183,7 +180,6 @@ while begin:
 
     pygame.display.update()
 
-
 while True:
 
     clock.tick(15)
@@ -226,7 +222,7 @@ while True:
     ground_group.draw(screen)
 
     pygame.display.update()
-    pygame.image.save(screen,f"dataset/{'jump' if jumped else 'no_jump'}/{uuid.uuid4()}.jpg")
+    pygame.image.save(screen, f"dataset/{'jump' if jumped else 'no_jump'}/{uuid.uuid4()}.jpg")
 
     if (pygame.sprite.groupcollide(bird_group, ground_group, False, False, pygame.sprite.collide_mask) or
             pygame.sprite.groupcollide(bird_group, pipe_group, False, False, pygame.sprite.collide_mask)):
@@ -234,4 +230,3 @@ while True:
         pygame.mixer.music.play()
         time.sleep(1)
         break
-
