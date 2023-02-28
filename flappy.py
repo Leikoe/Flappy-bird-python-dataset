@@ -8,7 +8,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from numpy import asarray
 
-ia_mode = True
+ia_mode = False
 if ia_mode:
     model = keras.models.load_model("../model")
 
@@ -193,6 +193,8 @@ while True:
 
         pygame.display.update()
 
+    screens = []
+
     while True:
 
         clock.tick(15)
@@ -239,14 +241,25 @@ while True:
         if ia_mode:
             strFormat = 'RGBA'
             raw_str = pygame.image.tostring(screen, strFormat, False)
-            image = Image.frombytes(strFormat, screen.get_size(), raw_str).convert("L").filter(ImageFilter.FIND_EDGES).resize((25, 25))
+            image = Image.frombytes(strFormat, screen.get_size(), raw_str).convert("L").resize((50, 50))
             pred = model(asarray(image)[None, :,:,None]).numpy()
             # print(pred)
             if pred[0][1] > 0.5:
                 print("JUMPING !")
                 pygame.event.post(pygame.event.Event(pygame.KEYDOWN, {'mod': 0, 'scancode': 30, 'key': pygame.K_SPACE, 'unicode': ' '}))
         else:
-            pygame.image.save(screen, f"dataset/{'jump' if jumped else 'no_jump'}/{uuid.uuid4()}.jpg")
+            strFormat = 'RGBA'
+            raw_str = pygame.image.tostring(screen, strFormat, False)
+            image = Image.frombytes(strFormat, screen.get_size(), raw_str)
+            speed_data = int(bird.speed + 100) # bird speed is typically between -100 and 100
+            for x in range(100):
+                for y in range(100):
+                    image.putpixel((x, y), (speed_data, speed_data, speed_data))
+            screens.append(image)
+            if len(screens) >= 10:
+                screens.pop(0).save(f"dataset/{'jump' if jumped else 'no_jump'}/{uuid.uuid4()}.png")
+            print(len(screens))
+            # pygame.image.save(screen, f"dataset/{'jump' if jumped else 'no_jump'}/{uuid.uuid4()}.jpg")
 
         if (pygame.sprite.groupcollide(bird_group, ground_group, False, False, pygame.sprite.collide_mask) or
                 pygame.sprite.groupcollide(bird_group, pipe_group, False, False, pygame.sprite.collide_mask)):
