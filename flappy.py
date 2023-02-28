@@ -2,13 +2,13 @@ import pygame, random, time
 from pygame.locals import *
 import uuid
 import os
-from PIL import Image
+from PIL import Image, ImageFilter
 import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
 from numpy import asarray
 
-ia_mode = False
+ia_mode = True
 if ia_mode:
     model = keras.models.load_model("../model")
 
@@ -114,7 +114,7 @@ def is_off_screen(sprite):
 
 
 def get_random_pipes(xpos):
-    size = random.randint(100, 300)
+    size = random.randint(150, 350)
     pipe = Pipe(False, xpos, size)
     pipe_inverted = Pipe(True, xpos, SCREEN_HEIGHT - size - PIPE_GAP)
     return pipe, pipe_inverted
@@ -128,123 +128,129 @@ BACKGROUND = pygame.image.load('assets/sprites/background-day.png')
 BACKGROUND = pygame.transform.scale(BACKGROUND, (SCREEN_WIDHT, SCREEN_HEIGHT))
 BEGIN_IMAGE = pygame.image.load('assets/sprites/message.png').convert_alpha()
 
-bird_group = pygame.sprite.Group()
-bird = Bird()
-bird_group.add(bird)
-
-ground_group = pygame.sprite.Group()
-
-for i in range(2):
-    ground = Ground(GROUND_WIDHT * i)
-    ground_group.add(ground)
-
-pipe_group = pygame.sprite.Group()
-for i in range(2):
-    pipes = get_random_pipes(SCREEN_WIDHT * i + 800)
-    pipe_group.add(pipes[0])
-    pipe_group.add(pipes[1])
-
-# make sure dataset/jump | dataset/no_jump are valid folders
-DATASET_FOLDER = "dataset"
-JUMP_FOLDER = "jump"
-NO_JUMP_FOLDER = "no_jump"
-if not os.path.isdir(f"{DATASET_FOLDER}/"):
-    os.mkdir(DATASET_FOLDER)
-if not os.path.isdir(f"{DATASET_FOLDER}/{JUMP_FOLDER}"):
-    os.mkdir(f"{DATASET_FOLDER}/{JUMP_FOLDER}")
-if not os.path.isdir(f"{DATASET_FOLDER}/{NO_JUMP_FOLDER}"):
-    os.mkdir(f"{DATASET_FOLDER}/{NO_JUMP_FOLDER}")
-
-clock = pygame.time.Clock()
-
-begin = True
-
-while begin:
-
-    clock.tick(20)
-
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.quit()
-        if event.type == KEYDOWN:
-            if event.key == K_SPACE or event.key == K_UP:
-                bird.bump()
-                pygame.mixer.music.load(wing)
-                pygame.mixer.music.play()
-                begin = False
-
-    screen.blit(BACKGROUND, (0, 0))
-    screen.blit(BEGIN_IMAGE, (120, 150))
-
-    if is_off_screen(ground_group.sprites()[0]):
-        ground_group.remove(ground_group.sprites()[0])
-
-        new_ground = Ground(GROUND_WIDHT - 20)
-        ground_group.add(new_ground)
-
-    bird.begin()
-    ground_group.update()
-
-    bird_group.draw(screen)
-    ground_group.draw(screen)
-
-    pygame.display.update()
-
+# restart game when bird dies :/
 while True:
 
-    clock.tick(15)
+    bird_group = pygame.sprite.Group()
+    bird = Bird()
+    bird_group.add(bird)
 
-    jumped = False
+    ground_group = pygame.sprite.Group()
 
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.quit()
-        if event.type == KEYDOWN:
-            if event.key == K_SPACE or event.key == K_UP:
-                bird.bump()
-                pygame.mixer.music.load(wing)
-                pygame.mixer.music.play()
-                jumped = True
+    for i in range(2):
+        ground = Ground(GROUND_WIDHT * i)
+        ground_group.add(ground)
 
-    screen.blit(BACKGROUND, (0, 0))
-
-    if is_off_screen(ground_group.sprites()[0]):
-        ground_group.remove(ground_group.sprites()[0])
-
-        new_ground = Ground(GROUND_WIDHT - 20)
-        ground_group.add(new_ground)
-
-    if is_off_screen(pipe_group.sprites()[0]):
-        pipe_group.remove(pipe_group.sprites()[0])
-        pipe_group.remove(pipe_group.sprites()[0])
-
-        pipes = get_random_pipes(SCREEN_WIDHT * 2)
-
+    pipe_group = pygame.sprite.Group()
+    for i in range(2):
+        pipes = get_random_pipes(SCREEN_WIDHT * i + 800)
         pipe_group.add(pipes[0])
         pipe_group.add(pipes[1])
 
-    bird_group.update()
-    ground_group.update()
-    pipe_group.update()
+    # make sure dataset/jump | dataset/no_jump are valid folders
+    DATASET_FOLDER = "dataset"
+    JUMP_FOLDER = "jump"
+    NO_JUMP_FOLDER = "no_jump"
+    if not os.path.isdir(f"{DATASET_FOLDER}/"):
+        os.mkdir(DATASET_FOLDER)
+    if not os.path.isdir(f"{DATASET_FOLDER}/{JUMP_FOLDER}"):
+        os.mkdir(f"{DATASET_FOLDER}/{JUMP_FOLDER}")
+    if not os.path.isdir(f"{DATASET_FOLDER}/{NO_JUMP_FOLDER}"):
+        os.mkdir(f"{DATASET_FOLDER}/{NO_JUMP_FOLDER}")
 
-    bird_group.draw(screen)
-    pipe_group.draw(screen)
-    ground_group.draw(screen)
+    clock = pygame.time.Clock()
 
-    pygame.display.update()
+    begin = True
 
-    if ia_mode:
-        strFormat = 'RGBA'
-        raw_str = pygame.image.tostring(screen, strFormat, False)
-        image = Image.frombytes(strFormat, screen.get_size(), raw_str).convert("L")
-        pred = model(asarray(image)[None, :,:,None]).numpy()
-        print(pred[0][0])
-    else:
-        pygame.image.save(screen, f"dataset/{'jump' if jumped else 'no_jump'}/{uuid.uuid4()}.jpg")
+    while begin and not ia_mode:
 
-    if (pygame.sprite.groupcollide(bird_group, ground_group, False, False, pygame.sprite.collide_mask) or
-            pygame.sprite.groupcollide(bird_group, pipe_group, False, False, pygame.sprite.collide_mask)):
-        pygame.mixer.music.load(hit)
-        pygame.mixer.music.play()
-        time.sleep(1)
-        break
+        clock.tick(20)
+
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+            if event.type == KEYDOWN:
+                if event.key == K_SPACE or event.key == K_UP:
+                    bird.bump()
+                    pygame.mixer.music.load(wing)
+                    pygame.mixer.music.play()
+                    begin = False
+
+        screen.blit(BACKGROUND, (0, 0))
+        screen.blit(BEGIN_IMAGE, (120, 150))
+
+        if is_off_screen(ground_group.sprites()[0]):
+            ground_group.remove(ground_group.sprites()[0])
+
+            new_ground = Ground(GROUND_WIDHT - 20)
+            ground_group.add(new_ground)
+
+        bird.begin()
+        ground_group.update()
+
+        bird_group.draw(screen)
+        ground_group.draw(screen)
+
+        pygame.display.update()
+
+    while True:
+
+        clock.tick(15)
+
+        jumped = False
+
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+            if event.type == KEYDOWN:
+                if event.key == K_SPACE or event.key == K_UP:
+                    bird.bump()
+                    pygame.mixer.music.load(wing)
+                    pygame.mixer.music.play()
+                    jumped = True
+
+        screen.blit(BACKGROUND, (0, 0))
+
+        if is_off_screen(ground_group.sprites()[0]):
+            ground_group.remove(ground_group.sprites()[0])
+
+            new_ground = Ground(GROUND_WIDHT - 20)
+            ground_group.add(new_ground)
+
+        if is_off_screen(pipe_group.sprites()[0]):
+            pipe_group.remove(pipe_group.sprites()[0])
+            pipe_group.remove(pipe_group.sprites()[0])
+
+            pipes = get_random_pipes(SCREEN_WIDHT * 2)
+
+            pipe_group.add(pipes[0])
+            pipe_group.add(pipes[1])
+
+        bird_group.update()
+        ground_group.update()
+        pipe_group.update()
+
+        bird_group.draw(screen)
+        pipe_group.draw(screen)
+        ground_group.draw(screen)
+
+        pygame.display.update()
+
+        if ia_mode:
+            strFormat = 'RGBA'
+            raw_str = pygame.image.tostring(screen, strFormat, False)
+            image = Image.frombytes(strFormat, screen.get_size(), raw_str).convert("L").filter(ImageFilter.FIND_EDGES).resize((25, 25))
+            pred = model(asarray(image)[None, :,:,None]).numpy()
+            # print(pred)
+            if pred[0][1] > 0.5:
+                print("JUMPING !")
+                pygame.event.post(pygame.event.Event(pygame.KEYDOWN, {'mod': 0, 'scancode': 30, 'key': pygame.K_SPACE, 'unicode': ' '}))
+        else:
+            pygame.image.save(screen, f"dataset/{'jump' if jumped else 'no_jump'}/{uuid.uuid4()}.jpg")
+
+        if (pygame.sprite.groupcollide(bird_group, ground_group, False, False, pygame.sprite.collide_mask) or
+                pygame.sprite.groupcollide(bird_group, pipe_group, False, False, pygame.sprite.collide_mask)):
+            pygame.mixer.music.load(hit)
+            pygame.mixer.music.play()
+            time.sleep(1)
+            break
