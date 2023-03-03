@@ -238,23 +238,22 @@ while True:
 
         pygame.display.update()
 
+        strFormat = 'RGBA'
+        raw_str = pygame.image.tostring(screen, strFormat, False)
+        image = Image.frombytes(strFormat, screen.get_size(), raw_str)
+        speed_data = int(bird.speed * 2 + 100)  # bird speed is typically between -50 and 50
+        for x in range(100):
+            for y in range(100):
+                image.putpixel((x, y), (speed_data, speed_data, speed_data))
+
         if ia_mode:
-            strFormat = 'RGBA'
-            raw_str = pygame.image.tostring(screen, strFormat, False)
-            image = Image.frombytes(strFormat, screen.get_size(), raw_str).convert("L").resize((50, 50))
+            image = image.convert("L").filter(ImageFilter.FIND_EDGES).resize((50, 50))
             pred = model(asarray(image)[None, :,:,None]).numpy()
             # print(pred)
             if pred[0][1] > 0.5:
                 print("JUMPING !")
                 pygame.event.post(pygame.event.Event(pygame.KEYDOWN, {'mod': 0, 'scancode': 30, 'key': pygame.K_SPACE, 'unicode': ' '}))
         else:
-            strFormat = 'RGBA'
-            raw_str = pygame.image.tostring(screen, strFormat, False)
-            image = Image.frombytes(strFormat, screen.get_size(), raw_str)
-            speed_data = int(bird.speed + 100) # bird speed is typically between -100 and 100
-            for x in range(100):
-                for y in range(100):
-                    image.putpixel((x, y), (speed_data, speed_data, speed_data))
             screens.append(image)
             if len(screens) >= 10:
                 screens.pop(0).save(f"dataset/{'jump' if jumped else 'no_jump'}/{uuid.uuid4()}.png")
