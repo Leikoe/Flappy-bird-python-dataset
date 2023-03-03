@@ -8,7 +8,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from numpy import asarray
 
-ia_mode = True
+ia_mode = False
 if ia_mode:
     model = keras.models.load_model("../model")
 
