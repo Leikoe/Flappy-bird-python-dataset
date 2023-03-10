@@ -8,7 +8,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from numpy import asarray
 
-ia_mode = True
+ia_mode = False
 if ia_mode:
     model = keras.models.load_model("../model")
 
@@ -130,6 +130,8 @@ BEGIN_IMAGE = pygame.image.load('assets/sprites/message.png').convert_alpha()
 
 # restart game when bird dies :/
 while True:
+    run_uuid = uuid.uuid4()
+    frame_idx = 0
 
     bird_group = pygame.sprite.Group()
     bird = Bird()
@@ -149,14 +151,8 @@ while True:
 
     # make sure dataset/jump | dataset/no_jump are valid folders
     DATASET_FOLDER = "dataset"
-    JUMP_FOLDER = "jump"
-    NO_JUMP_FOLDER = "no_jump"
     if not os.path.isdir(f"{DATASET_FOLDER}/"):
         os.mkdir(DATASET_FOLDER)
-    if not os.path.isdir(f"{DATASET_FOLDER}/{JUMP_FOLDER}"):
-        os.mkdir(f"{DATASET_FOLDER}/{JUMP_FOLDER}")
-    if not os.path.isdir(f"{DATASET_FOLDER}/{NO_JUMP_FOLDER}"):
-        os.mkdir(f"{DATASET_FOLDER}/{NO_JUMP_FOLDER}")
 
     clock = pygame.time.Clock()
 
@@ -242,10 +238,10 @@ while True:
         strFormat = 'RGBA'
         raw_str = pygame.image.tostring(screen, strFormat, False)
         image = Image.frombytes(strFormat, screen.get_size(), raw_str)
-        speed_data = int(bird.speed * 2 + 100)  # bird speed is typically between -50 and 50
-        for x in range(100):
-            for y in range(100):
-                image.putpixel((x, y), (speed_data, speed_data, speed_data))
+        # speed_data = int(bird.speed * 2 + 100)  # bird speed is typically between -50 and 50
+        # for x in range(100):
+        #     for y in range(100):
+        #         image.putpixel((x, y), (speed_data, speed_data, speed_data))
 
         if ia_mode:
             image = image.convert("L").filter(ImageFilter.FIND_EDGES).resize((50, 50))
@@ -257,8 +253,8 @@ while True:
         else:
             screens.append(image)
             if len(screens) >= 10:
-                screens.pop(0).save(f"dataset/{'jump' if jumped else 'no_jump'}/{uuid.uuid4()}.png")
-            print(len(screens))
+                screens.pop(0).save(f"dataset/{run_uuid}_{frame_idx}_{1 if jumped else 0}.png")
+                frame_idx += 1
             # pygame.image.save(screen, f"dataset/{'jump' if jumped else 'no_jump'}/{uuid.uuid4()}.jpg")
 
         if (pygame.sprite.groupcollide(bird_group, ground_group, False, False, pygame.sprite.collide_mask) or
@@ -267,3 +263,4 @@ while True:
             pygame.mixer.music.play()
             time.sleep(1)
             break
+
