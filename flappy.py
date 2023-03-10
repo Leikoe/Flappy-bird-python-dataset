@@ -8,7 +8,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from numpy import asarray
 
-ia_mode = False
+ia_mode = True
 if ia_mode:
     model = keras.models.load_model("../model")
 
@@ -242,16 +242,20 @@ while True:
         # for x in range(100):
         #     for y in range(100):
         #         image.putpixel((x, y), (speed_data, speed_data, speed_data))
+        screens.append(image)
 
         if ia_mode:
-            image = image.convert("L").filter(ImageFilter.FIND_EDGES).resize((50, 50))
-            pred = model(asarray(image)[None, :,:,None]).numpy()
-            # print(pred)
-            if pred[0][1] > 0.5:
-                print("JUMPING !")
-                pygame.event.post(pygame.event.Event(pygame.KEYDOWN, {'mod': 0, 'scancode': 30, 'key': pygame.K_SPACE, 'unicode': ' '}))
+            if len(screens) >= 4:
+                imgs = screens.pop(0), *screens[0:3]
+                imgs = list(map(lambda i: asarray(i.convert("L").resize((80, 80))), imgs))
+                imgs = np.array([imgs])
+                imgs = np.einsum("echw->ehwc", imgs)
+                pred = model(imgs).numpy()
+                # print(pred)
+                if pred[0][1] > 0.5:
+                    print("JUMPING !")
+                    pygame.event.post(pygame.event.Event(pygame.KEYDOWN, {'mod': 0, 'scancode': 30, 'key': pygame.K_SPACE, 'unicode': ' '}))
         else:
-            screens.append(image)
             if len(screens) >= 10:
                 screens.pop(0).save(f"dataset/{run_uuid}_{frame_idx}_{1 if jumped else 0}.png")
                 frame_idx += 1
