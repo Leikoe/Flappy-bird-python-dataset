@@ -125,12 +125,12 @@ def should_jump(flappy, pipe_grp):
     flappy_bottom = flappy.rect[1] + flappy.rect[3]
     if (flappy_bottom >= 460) or (flappy_bottom >= 450 and flappy.speed < 0):
         return 2
-    if flappy.rect[1] + flappy.rect[3] // 2 > (pipe_grp.sprites()[0].rect[1] - int(3 / 8 * PIPE_GAP)):
+    if flappy.rect[1] + flappy.rect[3] // 2 > (pipe_grp.sprites()[0].rect[1] - int(1 / 3 * PIPE_GAP)):
         return 1
     return 0
-    # or (flappy.rect[1] > pipe_grp.sprites()[0].rect[1] - PIPE_GAP // 2 and flappy.speed <= -12.5))
 
 
+"""
 def draw_stuff(img, color):
     # Draw the action hint on the image with the given color
     for x in range(bird.rect[0]):
@@ -146,7 +146,7 @@ def draw_action_hint(img, action):
         draw_stuff(img, 100)  # Grey
     else:  # should_jump == 2
         draw_stuff(img, 0)  # Black
-
+"""
 
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -240,7 +240,7 @@ while True:
                     jumped = True
 
         # screen.blit(BACKGROUND, (0, 0))
-        screen.fill((190, 190, 190))
+        screen.fill((0, 0, 0))
 
         if is_off_screen(ground_group.sprites()[0]):
             ground_group.remove(ground_group.sprites()[0])
@@ -270,11 +270,11 @@ while True:
         strFormat = 'RGBA'
         raw_str = pygame.image.tostring(screen, strFormat, False)
         image = Image.frombytes(strFormat, screen.get_size(), raw_str)
-        draw_action_hint(image, should_jump(bird, pipe_group))
+        # draw_action_hint(image, should_jump(bird, pipe_group))
         # speed_data = int(bird.speed * 2 + 100)  # bird speed is typically between -50 and 50
         # for x in range(bird.rect[0]):
-        # for y in range(SCREEN_HEIGHT):
-        # image.putpixel((x, y), (speed_data, speed_data, speed_data))
+        #     for y in range(SCREEN_HEIGHT):
+        #         image.putpixel((x, y), (speed_data, speed_data, speed_data))
 
         if ia_mode:
             # image = image.convert("L").filter(ImageFilter.FIND_EDGES).resize((50, 50))
@@ -286,7 +286,8 @@ while True:
                                                      {'mod': 0, 'scancode': 30, 'key': pygame.K_SPACE, 'unicode': ' '}))
                 print("JUMPING !")
         else:
-            image.save(f"dataset/{'jump' if should_jump(bird, pipe_group) else 'no_jump'}/{uuid.uuid4()}.png")
+            image.save(
+                f"dataset/{'jump' if (should_jump(bird, pipe_group) == 1 or should_jump(bird, pipe_group) == 2) else 'no_jump'}/{uuid.uuid4()}.png")
             # screens.append(image)
             # if len(screens) >= 10:
             #    screens.pop(0).save(f"dataset/{'jump' if jumped else 'no_jump'}/{uuid.uuid4()}.png")
